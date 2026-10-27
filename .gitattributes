@@ -1,0 +1,11 @@
+# Project sources: normalise to LF in the repo.
+* text=auto eol=lf
+
+# Vendored builds and saved drawings: store bytes verbatim, never convert.
+vendor/** -text
+drawings/*.ket -text
+drawings/*.svg -text
+
+*.wasm binary
+*.png binary
+*.ico binary

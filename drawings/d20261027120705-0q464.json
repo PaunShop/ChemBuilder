@@ -1,0 +1,10 @@
+{
+  "id": "d20261027120705-0q464",
+  "name": "Caffeine",
+  "kind": "molecule",
+  "smiles": "C[n]1c2c([n](c([n](C)c2nc1)=O)C)=O",
+  "formula": "C8H10N4O2",
+  "note": "",
+  "created": "2026-10-27T12:07:05.844Z",
+  "updated": "2026-10-27T12:07:05.844Z"
+}

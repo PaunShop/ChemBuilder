@@ -1,0 +1,13 @@
+{
+  "name": "chemdraw-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local molecule and reaction-scheme editor with live properties, scheme analysis and exports.",
+  "scripts": {
+    "start": "node server.js --open",
+    "serve": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

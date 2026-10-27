@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ChemDraw Studio</title>
+    <link rel="icon" type="image/svg+xml" href="/app/icon.svg" />
+    <link rel="stylesheet" href="/app/app.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img src="/app/icon.svg" alt="" width="24" height="24" />
+        <span>ChemDraw Studio</span>
+      </div>
+
+      <button id="btn-lib" class="icon-btn" type="button" title="Toggle library (Ctrl+B)" aria-pressed="true">
+        Library
+      </button>
+
+      <label class="name-field">
+        <span class="sr-only">Drawing name</span>
+        <input id="name" type="text" placeholder="Untitled drawing" autocomplete="off" spellcheck="false" />
+      </label>
+
+      <span id="dirty" class="dirty" hidden title="Unsaved changes">&bull;</span>
+
+      <div class="spacer"></div>
+
+      <button id="btn-new" class="btn" type="button" title="New drawing (Ctrl+Alt+N)">New</button>
+      <button id="btn-save" class="btn primary" type="button" title="Save (Ctrl+S)">Save</button>
+      <span id="engine" class="engine" title="Chemistry engine status">engine loading</span>
+      <button id="btn-insp" class="icon-btn" type="button" title="Toggle inspector (Ctrl+I)" aria-pressed="true">
+        Inspector
+      </button>
+    </header>
+
+    <main class="layout" id="layout">
+      <aside class="library" id="library">
+        <div class="lib-head">
+          <input id="lib-search" type="search" placeholder="Search saved drawings" autocomplete="off" />
+          <span id="lib-count" class="muted small">0</span>
+        </div>
+        <div id="library-list" class="lib-list" role="list"></div>
+        <p class="lib-foot muted small">
+          Saved to <code id="lib-path">drawings/</code>
+        </p>
+      </aside>
+
+      <section class="canvas">
+        <iframe id="ketcher" src="/vendor/ketcher/index.html" title="Structure editor"></iframe>
+        <div id="canvas-veil" class="veil"><span class="spin"></span> Loading editor…</div>
+      </section>
+
+      <aside class="inspector" id="inspector">
+        <nav class="tabs" role="tablist">
+          <button class="tab active" data-tab="props" role="tab" type="button">Properties</button>
+          <button class="tab" data-tab="rxn" role="tab" type="button">Reaction</button>
+          <button class="tab" data-tab="formats" role="tab" type="button">Formats</button>
+          <button class="tab" data-tab="image" role="tab" type="button">Image</button>
+        </nav>
+
+        <div class="panel active" id="panel-props" role="tabpanel">
+          <div class="chip-row">
+            <span id="kind-chip" class="chip">Empty canvas</span>
+            <button id="btn-refresh" class="link-btn" type="button" title="Recalculate now">refresh</button>
+          </div>
+          <p id="partial-note" class="note" hidden></p>
+          <div class="headline">
+            <div class="formula" id="formula">&mdash;</div>
+            <div class="headline-nums">
+              <div><span class="muted small">MW</span><b id="mw">&mdash;</b></div>
+              <div><span class="muted small">Monoisotopic</span><b id="exact">&mdash;</b></div>
+            </div>
+          </div>
+          <div id="rule-badges" class="badges"></div>
+          <dl id="prop-grid" class="prop-grid"></dl>
+          <div id="elements-box" class="elements-box" hidden>
+            <span class="muted small">Composition</span>
+            <div id="elements-list" class="elements-list"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-rxn" role="tabpanel">
+          <div class="chip-row">
+            <span id="rxn-chip" class="chip">No reaction on canvas</span>
+          </div>
+          <label class="field">
+            <span class="muted small">Reaction SMILES</span>
+            <div class="copy-row">
+              <textarea id="rxn-smiles" rows="2" readonly placeholder="Draw a reaction arrow to populate"></textarea>
+              <button class="btn tiny" type="button" data-copy="rxn-smiles">copy</button>
+            </div>
+          </label>
+
+          <div class="table-wrap">
+            <table class="data" id="rxn-table">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Formula</th>
+                  <th class="num">MW</th>
+                  <th class="num">equiv</th>
+                  <th class="num">mmol</th>
+                  <th class="num">mass</th>
+                </tr>
+              </thead>
+              <tbody id="rxn-components"></tbody>
+            </table>
+          </div>
+
+          <fieldset class="stoich">
+            <legend>Stoichiometry</legend>
+            <div class="stoich-row">
+              <label>
+                <span class="muted small">Scale from</span>
+                <select id="stoich-ref"></select>
+              </label>
+              <label>
+                <span class="muted small">Mass (mg)</span>
+                <input id="stoich-mass" type="number" min="0" step="any" placeholder="100" />
+              </label>
+            </div>
+            <div class="stoich-row">
+              <label>
+                <span class="muted small">Isolated product</span>
+                <select id="yield-ref"></select>
+              </label>
+              <label>
+                <span class="muted small">Isolated (mg)</span>
+                <input id="yield-mass" type="number" min="0" step="any" placeholder="0" />
+              </label>
+            </div>
+            <p id="yield-out" class="yield-out muted">Enter a mass to scale the scheme.</p>
+          </fieldset>
+
+          <div class="balance">
+            <div class="chip-row">
+              <span class="muted small">Atom balance</span>
+              <span id="balance-verdict" class="chip">&mdash;</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data compact">
+                <thead>
+                  <tr><th>Element</th><th class="num">Left</th><th class="num">Right</th><th class="num">&Delta;</th></tr>
+                </thead>
+                <tbody id="balance-table"></tbody>
+              </table>
+            </div>
+            <p id="mass-balance" class="muted small"></p>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-formats" role="tabpanel">
+          <div class="chip-row">
+            <span class="muted small">Text formats</span>
+            <button id="btn-formats-refresh" class="link-btn" type="button">regenerate</button>
+          </div>
+          <div id="formats-list" class="formats"></div>
+        </div>
+
+        <div class="panel" id="panel-image" role="tabpanel">
+          <div class="img-opts">
+            <label><span class="muted small">Width</span><input id="img-width" type="number" min="64" max="4000" step="1" value="900" /></label>
+            <label><span class="muted small">Max height</span><input id="img-height" type="number" min="64" max="4000" step="1" value="1200" /></label>
+            <label class="check"><input id="img-transparent" type="checkbox" /> <span>Transparent background</span></label>
+          </div>
+          <div class="btn-row">
+            <button id="btn-png" class="btn" type="button">Download PNG</button>
+            <button id="btn-svg" class="btn" type="button">Download SVG</button>
+            <button id="btn-copy-png" class="btn" type="button">Copy PNG</button>
+          </div>
+          <div class="preview-head">
+            <span class="muted small">Preview</span>
+            <button id="btn-preview" class="link-btn" type="button">render</button>
+          </div>
+          <div id="img-preview" class="img-preview"></div>
+        </div>
+      </aside>
+    </main>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <script src="/vendor/rdkit/RDKit_minimal.js"></script>
+    <script src="/app/chem.js"></script>
+    <script src="/app/app.js"></script>
+  </body>
+</html>

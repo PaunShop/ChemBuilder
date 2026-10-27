@@ -1,0 +1,10 @@
+{
+  "id": "d20261027120702-0yqsq",
+  "name": "Aspirin",
+  "kind": "molecule",
+  "smiles": "CC(Oc1c(C(O)=O)cccc1)=O",
+  "formula": "C9H8O4",
+  "note": "",
+  "created": "2026-10-27T12:07:02.053Z",
+  "updated": "2026-10-27T12:07:02.053Z"
+}
