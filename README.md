@@ -1,4 +1,4 @@
-# ChemDraw Studio
+# ChemBuild
 
 A local app for drawing molecules and reaction schemes, with live property
 calculation, scheme analysis and export. Everything runs on your machine:
@@ -6,7 +6,7 @@ no account, no network calls, no data leaves the box.
 
 ## Start it
 
-Double-click **`ChemDraw.cmd`**, or from a terminal:
+Double-click **`ChemBuild.cmd`**, or from a terminal:
 
 ```
 npm start          # starts the server and opens your browser
@@ -14,7 +14,7 @@ node server.js     # starts the server only
 ```
 
 The server binds to `127.0.0.1` on port 8731 (it walks up to 8740 if that
-port is busy; set `CHEMDRAW_PORT` to pin one). It has no dependencies, so
+port is busy; set `CHEMBUILD_PORT` to pin one). It has no dependencies, so
 there is nothing to install beyond Node 18 or newer.
 
 ## What it does

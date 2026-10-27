@@ -1,13 +1,13 @@
 /*
- * app.js - ChemDraw Studio shell.
+ * app.js - ChemBuild shell.
  * Owns the Ketcher iframe bridge, the saved-drawing library,
  * the property/reaction inspector and all export paths.
  */
 (function () {
   'use strict';
 
-  var DRAFT_KEY = 'chemdraw.draft.v1';
-  var PANEL_KEY = 'chemdraw.panels.v1';
+  var DRAFT_KEY = 'chembuild.draft.v1';
+  var PANEL_KEY = 'chembuild.panels.v1';
 
   var state = {
     ketcher: null,

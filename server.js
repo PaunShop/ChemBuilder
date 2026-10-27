@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /*
- * ChemDraw Studio - zero-dependency local server.
+ * ChemBuild - zero-dependency local server.
  * Serves the app shell, the vendored Ketcher editor and RDKit WASM,
  * plus a small JSON API backed by plain files in ./drawings.
  * Binds to loopback only.
@@ -257,7 +257,7 @@ async function handleApi(req, res, url) {
 
   if (section === 'info' && req.method === 'GET') {
     return sendJson(res, 200, {
-      app: 'ChemDraw Studio',
+      app: 'ChemBuild',
       drawingsDir: DRAWINGS,
       node: process.version,
     });
@@ -325,10 +325,10 @@ function openBrowser(url) {
 
 (async () => {
   await fsp.mkdir(DRAWINGS, { recursive: true });
-  const envPort = process.env.CHEMDRAW_PORT ? [Number(process.env.CHEMDRAW_PORT)] : PORT_RANGE;
+  const envPort = process.env.CHEMBUILD_PORT ? [Number(process.env.CHEMBUILD_PORT)] : PORT_RANGE;
   const port = await listen(envPort);
   const url = 'http://' + HOST + ':' + port + '/';
-  console.log('ChemDraw Studio ready  ->  ' + url);
+  console.log('ChemBuild ready  ->  ' + url);
   console.log('Drawings folder: ' + DRAWINGS);
   console.log('Press Ctrl+C to stop.');
   if (process.argv.indexOf('--open') !== -1) openBrowser(url);

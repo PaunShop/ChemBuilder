@@ -1,5 +1,5 @@
 @echo off
-title ChemDraw Studio
+title ChemBuild
 cd /d "%~dp0"
 where node >nul 2>nul
 if errorlevel 1 (
@@ -9,5 +9,5 @@ if errorlevel 1 (
 )
 node "%~dp0server.js" --open
 echo.
-echo ChemDraw Studio has stopped.
+echo ChemBuild has stopped.
 pause

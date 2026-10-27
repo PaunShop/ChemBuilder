@@ -1,5 +1,5 @@
 {
-  "name": "chemdraw-studio",
+  "name": "chembuild",
   "version": "1.0.0",
   "private": true,
   "description": "Local molecule and reaction-scheme editor with live properties, scheme analysis and exports.",
