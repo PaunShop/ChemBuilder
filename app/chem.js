@@ -1,5 +1,5 @@
 /*
- * chem.js - chemistry services for ChemBuild.
+ * chem.js - chemistry services for ChemBuilder.
  * Wraps RDKit.js (WASM) with helpers for molecule properties,
  * reaction-scheme decomposition and element balance.
  * Everything runs locally in the browser.

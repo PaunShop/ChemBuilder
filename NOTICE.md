@@ -1,6 +1,6 @@
 # Third-party notices
 
-ChemBuild bundles the following open-source software, unmodified,
+ChemBuilder bundles the following open-source software, unmodified,
 under `vendor/`. Each is redistributed under its own licence, and the full
 licence text ships alongside it.
 

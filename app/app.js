@@ -1,13 +1,13 @@
 /*
- * app.js - ChemBuild shell.
+ * app.js - ChemBuilder shell.
  * Owns the Ketcher iframe bridge, the saved-drawing library,
  * the property/reaction inspector and all export paths.
  */
 (function () {
   'use strict';
 
-  var DRAFT_KEY = 'chembuild.draft.v1';
-  var PANEL_KEY = 'chembuild.panels.v1';
+  var DRAFT_KEY = 'chembuilder.draft.v1';
+  var PANEL_KEY = 'chembuilder.panels.v1';
 
   var state = {
     ketcher: null,
@@ -164,6 +164,19 @@
 
   function clearDraft() {
     try { localStorage.removeItem(DRAFT_KEY); } catch (err) { /* ignore */ }
+  }
+
+  /* The app used to be called ChemBuild: carry its draft and panel prefs over once. */
+  function migrateStorage() {
+    var pairs = [['chembuild.draft.v1', DRAFT_KEY], ['chembuild.panels.v1', PANEL_KEY]];
+    try {
+      for (var i = 0; i < pairs.length; i++) {
+        var old = localStorage.getItem(pairs[i][0]);
+        if (old === null) continue;
+        if (localStorage.getItem(pairs[i][1]) === null) localStorage.setItem(pairs[i][1], old);
+        localStorage.removeItem(pairs[i][0]);
+      }
+    } catch (err) { /* storage unavailable */ }
   }
 
   /* ---------- Ketcher bridge ---------- */
@@ -899,7 +912,7 @@
      keeps drawing and computing properties even after the server goes away. The
      only things that still need it are saving and the library - without this the
      first sign of a stopped server is a bare "Failed to fetch" on save. */
-  var OFFLINE_MSG = 'ChemBuild server has stopped - restart it, then press Retry';
+  var OFFLINE_MSG = 'ChemBuilder server has stopped - restart it, then press Retry';
   var offlineTimer = null;
 
   function setOffline(down) {
@@ -1309,6 +1322,7 @@
   async function boot() {
     cacheEls();
     wire();
+    migrateStorage();
     applyPanelPrefs();
     loadLibrary();
 
