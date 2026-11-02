@@ -1,30 +1,46 @@
 # ChemBuilder
 
-A local app for drawing molecules and reaction schemes, with live property
-calculation, scheme analysis and export. Everything runs on your machine:
-no account, no network calls, no data leaves the box.
+Draw molecules and reaction schemes on your own machine, with live
+properties, atom balance, stoichiometry and exports. No account, no
+network calls, nothing leaves the box.
 
-## Start it
+ChemBuilder is a small shell around two open-source engines: the
+[Ketcher](https://github.com/epam/ketcher) structure editor for drawing,
+and [RDKit](https://github.com/rdkit/rdkit) compiled to WebAssembly for
+the chemistry. A zero-dependency Node server serves the app and keeps
+your drawings as plain files in a folder you own.
 
-Double-click **`ChemBuilder.cmd`**, or from a terminal:
+## Quick start
+
+You need [Node.js](https://nodejs.org) 18 or newer. Nothing else is
+installed.
 
 ```
-npm start          # starts the server and opens your browser
-node server.js     # starts the server only
+git clone https://github.com/PaunShop/ChemBuilder.git
+cd ChemBuilder
+npm start
 ```
 
-The server binds to `127.0.0.1` on port 8731 (it walks up to 8740 if that
-port is busy; set `CHEMBUILDER_PORT` to pin one). It has no dependencies, so
-there is nothing to install beyond Node 18 or newer.
+`npm start` starts the server and opens your browser. On Windows you can
+also double-click **`ChemBuilder.cmd`**. To start the server without
+opening a browser, run `node server.js`.
 
-## What it does
+The server binds to `127.0.0.1` on port 8731 and walks up to 8740 if
+that port is busy; set `CHEMBUILDER_PORT` to pin one. The first load
+takes a few seconds while the editor and the chemistry engine (about
+38 MB together) are fetched; they are cached after that.
 
-**Drawing** is the Ketcher editor, embedded whole. Atoms, bonds, rings,
+Three example drawings ship in `drawings/`, so the library is not empty
+on first run.
+
+## Features
+
+**Drawing** is the Ketcher editor, embedded whole: atoms, bonds, rings,
 templates, stereo, charges, R-groups, text annotations, reaction arrows,
 plus signs and reagents written over the arrow. Multi-step schemes work.
+Paste a SMILES string or a MOL block straight onto the canvas.
 
-**Properties** update as you draw, computed by RDKit compiled to
-WebAssembly:
+**Properties** update as you draw:
 
 | | |
 |---|---|
@@ -36,35 +52,36 @@ WebAssembly:
 A half-drawn structure that RDKit cannot sanitize still reports its
 composition, with a note saying the rest is unavailable.
 
-**Reaction schemes** get their own panel: the reaction SMILES, a component
-table split into reactants, products and reagents over the arrow, and a
-per-element atom balance that tells you whether the scheme is balanced and
-by how much it is off.
+**Reaction schemes** get their own panel: the reaction SMILES, a
+component table split into reactants, products and reagents over the
+arrow, and a per-element atom balance that says whether the scheme is
+balanced and by how much it is off.
 
-**Stoichiometry** sits under the component table. Pick a reactant, enter a
-mass, set equivalents per component, and the table fills in mmol and mass
-for everything. Enter the isolated mass of a product for a yield. A
+**Stoichiometry** sits under the component table. Pick a reactant, enter
+a mass, set equivalents per component, and the table fills in mmol and
+mass for everything. Enter the isolated mass of a product for a yield. A
 multi-step scheme is analysed as its overall transformation.
 
 **Exports**
 
 - Text: SMILES, extended SMILES, SMARTS, MOL V2000 and V3000, SDF,
   RXN V2000 and V3000, CML, KET, InChI, InChIKey. Copy or save each one.
-- Image: PNG and SVG at any width, with the drawing's own aspect kept and
+- Image: PNG and SVG at any width, keeping the drawing's own aspect, with
   the height field acting as a cap. Optional transparent background.
-  "Copy PNG" puts the image straight on the clipboard for pasting into
-  slides or a document.
+  "Copy PNG" puts the image on the clipboard for pasting into slides or
+  a document.
 
 **Library.** Save a drawing and it lands in `drawings/` as three plain
 files: a `.ket` with the structure, a `.json` with the metadata and an
 `.svg` thumbnail. The sidebar lists them with search, duplicate and
-delete; click an entry to open it. Nothing is in a database, so the
-folder is yours to back up, diff or sync.
+delete; click an entry to open it. There is no database, so the folder
+is yours to back up, diff or sync.
 
-Unsaved work is kept in browser storage, so a refresh or an accidental
-close does not lose the canvas. The app asks before it replaces an
-unsaved canvas with a new or opened drawing, and the tab title shows a
-dot while there are unsaved changes.
+**Nothing is lost by accident.** Unsaved work is kept in browser
+storage, so a refresh or an accidental close does not lose the canvas.
+The app asks before replacing an unsaved canvas with a new or opened
+drawing, the tab title shows a dot while there are unsaved changes, and
+if the server stops a banner says so while drawing carries on.
 
 **Help.** The Help button in the top bar (or `F1`) opens a short guide
 and the shortcut list.
@@ -79,46 +96,44 @@ and the shortcut list.
 | `Ctrl` `I` | Toggle the inspector |
 | `F1` | Help and shortcuts |
 
-The editor itself has its own shortcuts, listed under its help button.
+The editor has its own shortcuts, listed under its help button on the
+canvas toolbar.
 
-## Layout
+## How it is put together
 
 ```
 server.js        zero-dependency HTTP + JSON API, loopback only
 app/             the shell: index.html, app.js, chem.js, app.css
 vendor/ketcher   Ketcher 3.18.0 standalone build
 vendor/rdkit     RDKit 2026.09.1 compiled to WebAssembly
-drawings/        your saved work, one .ket + .json + .svg per drawing
+drawings/        saved work, one .ket + .json + .svg per drawing
 ```
 
-`app/chem.js` is the only file that talks to RDKit. `app/app.js` owns the
-editor bridge, the library and the export paths. Neither needs a build
-step; edit and reload.
+`app/chem.js` is the only file that talks to RDKit. `app/app.js` owns
+the editor bridge, the library, the inspector and the export paths.
+There is no build step: edit a file and reload the page.
 
 ## Good to know
 
-- **First load takes a few seconds.** The editor and the chemistry engine
-  are about 37 MB together. They are cached immutably after that, so
-  later loads are fast.
 - **Reaction analysis reads the reaction SMILES**, so anything the editor
   cannot express in SMILES (free-text labels over an arrow, say) is not
   counted in the balance.
 - **The balance checks atoms, not chemistry.** An unbalanced verdict
-  usually means a reagent or by-product is missing from the drawing, which
-  is exactly what it is there to catch.
-- **Macromolecule mode** (the editor's own sequence/polymer view) has no
-  SMILES or MOL representation, so the inspector panels will report that
-  those formats are unavailable while it is on.
-- **Clipboard image copy** needs the browser's clipboard permission and a
-  recent Chrome, Edge or Firefox.
+  usually means a reagent or by-product is missing from the drawing,
+  which is exactly what it is there to catch.
 - **Attachment points** (the editor's `*` atom) show as `R` at the end of
   a formula and in the composition, and are not counted as heavy atoms.
+- **Macromolecule mode** (the editor's own sequence/polymer view) has no
+  SMILES or MOL representation, so the inspector panels report those
+  formats as unavailable while it is on.
+- **Clipboard image copy** needs the browser's clipboard permission and a
+  recent Chrome, Edge or Firefox.
 
 ## Licences
 
-This project embeds two open-source libraries, unmodified:
+ChemBuilder embeds two open-source libraries, unmodified:
 
 - **Ketcher** by EPAM Systems, Apache License 2.0 — `vendor/ketcher/LICENSE.txt`
 - **RDKit** by Greg Landrum and contributors, BSD 3-Clause — `vendor/rdkit/LICENSE.txt`
 
-See `NOTICE.md`.
+See `NOTICE.md` for the details of what each one provides.
