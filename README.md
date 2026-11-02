@@ -58,11 +58,16 @@ multi-step scheme is analysed as its overall transformation.
 **Library.** Save a drawing and it lands in `drawings/` as three plain
 files: a `.ket` with the structure, a `.json` with the metadata and an
 `.svg` thumbnail. The sidebar lists them with search, duplicate and
-delete. Nothing is in a database, so the folder is yours to back up,
-diff or sync.
+delete; click an entry to open it. Nothing is in a database, so the
+folder is yours to back up, diff or sync.
 
 Unsaved work is kept in browser storage, so a refresh or an accidental
-close does not lose the canvas.
+close does not lose the canvas. The app asks before it replaces an
+unsaved canvas with a new or opened drawing, and the tab title shows a
+dot while there are unsaved changes.
+
+**Help.** The Help button in the top bar (or `F1`) opens a short guide
+and the shortcut list.
 
 ## Keyboard
 
@@ -72,6 +77,7 @@ close does not lose the canvas.
 | `Ctrl` `Alt` `N` | New drawing |
 | `Ctrl` `B` | Toggle the library |
 | `Ctrl` `I` | Toggle the inspector |
+| `F1` | Help and shortcuts |
 
 The editor itself has its own shortcuts, listed under its help button.
 
@@ -105,6 +111,8 @@ step; edit and reload.
   those formats are unavailable while it is on.
 - **Clipboard image copy** needs the browser's clipboard permission and a
   recent Chrome, Edge or Firefox.
+- **Attachment points** (the editor's `*` atom) show as `R` at the end of
+  a formula and in the composition, and are not counted as heavy atoms.
 
 ## Licences
 

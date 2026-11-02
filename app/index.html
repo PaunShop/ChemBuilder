@@ -23,16 +23,17 @@
         <input id="name" type="text" placeholder="Untitled drawing" autocomplete="off" spellcheck="false" />
       </label>
 
-      <span id="dirty" class="dirty" hidden title="Unsaved changes">&bull;</span>
+      <span id="dirty" class="dirty" hidden title="Unsaved changes">Unsaved</span>
 
       <div class="spacer"></div>
 
       <button id="btn-new" class="btn" type="button" title="New drawing (Ctrl+Alt+N)">New</button>
       <button id="btn-save" class="btn primary" type="button" title="Save (Ctrl+S)">Save</button>
-      <span id="engine" class="engine" title="Chemistry engine status">engine loading</span>
+      <span id="engine" class="engine" title="Chemistry engine status">loading chemistry engine&hellip;</span>
       <button id="btn-insp" class="icon-btn" type="button" title="Toggle inspector (Ctrl+I)" aria-pressed="true">
         Inspector
       </button>
+      <button id="btn-help" class="btn" type="button" title="Help and shortcuts (F1)">Help</button>
     </header>
 
     <div id="offline-bar" class="offline-bar" hidden role="status">
@@ -187,6 +188,35 @@
         </div>
       </aside>
     </main>
+
+    <dialog id="help-dialog" class="help" aria-labelledby="help-title">
+      <form method="dialog">
+        <div class="help-head">
+          <h2 id="help-title">ChemBuilder help</h2>
+          <button class="btn tiny" type="submit">Close</button>
+        </div>
+
+        <h3>Getting started</h3>
+        <ol>
+          <li>Draw with the editor's tools, or paste a SMILES string or MOL block straight onto the canvas.</li>
+          <li>Properties update on the right as you draw. Add a reaction arrow and the Reaction tab fills in with components, atom balance and stoichiometry.</li>
+          <li>Name the drawing in the top bar and press Save. It appears in the library on the left and is stored as plain files in the drawings folder.</li>
+          <li>Click a library entry to open it. Use the Formats tab for SMILES, MOL, SDF, RXN, CML and InChI, and the Image tab for PNG and SVG.</li>
+        </ol>
+
+        <h3>Keyboard shortcuts</h3>
+        <table class="data compact">
+          <tbody>
+            <tr><td><kbd>Ctrl</kbd> <kbd>S</kbd></td><td>Save</td></tr>
+            <tr><td><kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>N</kbd></td><td>New drawing</td></tr>
+            <tr><td><kbd>Ctrl</kbd> <kbd>B</kbd></td><td>Toggle the library</td></tr>
+            <tr><td><kbd>Ctrl</kbd> <kbd>I</kbd></td><td>Toggle the inspector</td></tr>
+            <tr><td><kbd>F1</kbd></td><td>This help</td></tr>
+          </tbody>
+        </table>
+        <p class="muted small">The editor has its own shortcuts, listed under the <b>?</b> button on the canvas toolbar.</p>
+      </form>
+    </dialog>
 
     <div id="toasts" class="toasts" aria-live="polite"></div>
 

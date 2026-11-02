@@ -12,7 +12,9 @@
     'Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu ' +
     'Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og').split(' ');
 
+  /* Atomic number 0 is a dummy atom: an attachment point or R-group, drawn as "*". */
   function symbolFor(z) {
+    if (z === 0) return 'R';
     return SYMBOLS[z - 1] || ('Z' + z);
   }
 
@@ -82,7 +84,7 @@
         var chg = a.chg != null ? a.chg : defChg;
         var sym = symbolFor(z);
         counts[sym] = (counts[sym] || 0) + 1;
-        if (z !== 1) heavy++;
+        if (z > 1) heavy++;
         if (imp) counts.H = (counts.H || 0) + imp;
         charge += chg;
       }
@@ -90,14 +92,15 @@
     return { counts: counts, charge: charge, heavy: heavy };
   }
 
-  /* Hill notation: C first, then H, then the rest alphabetically. */
+  /* Hill notation: C first, then H, then the rest alphabetically. Attachment points (R) go last. */
   function hillFormula(counts, charge) {
     var keys = Object.keys(counts).filter(function (k) { return counts[k] > 0; });
-    var rest = keys.filter(function (k) { return k !== 'C' && k !== 'H'; }).sort();
+    var rest = keys.filter(function (k) { return k !== 'C' && k !== 'H' && k !== 'R'; }).sort();
     var order = [];
     if (counts.C) order.push('C');
     if (counts.H) order.push('H');
     order = order.concat(rest);
+    if (counts.R) order.push('R');
     var out = order
       .map(function (k) { return k + (counts[k] > 1 ? String(counts[k]) : ''); })
       .join('');

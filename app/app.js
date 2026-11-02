@@ -30,7 +30,7 @@
     'mass-balance', 'stoich-ref', 'stoich-mass', 'yield-ref', 'yield-mass', 'yield-out',
     'formats-list', 'btn-formats-refresh',
     'img-width', 'img-height', 'img-transparent', 'btn-png', 'btn-svg', 'btn-copy-png',
-    'btn-preview', 'img-preview', 'toasts', 'offline-bar', 'btn-retry',
+    'btn-preview', 'img-preview', 'toasts', 'offline-bar', 'btn-retry', 'btn-help', 'help-dialog',
   ];
 
   function $(id) {
@@ -129,7 +129,20 @@
   function setDirty(flag) {
     state.dirty = !!flag;
     el.dirty.hidden = !flag;
+    updateTitle();
     if (flag) saveDraft();
+  }
+
+  /* Keep the tab title in step with the drawing, so it reads right in the taskbar. */
+  function updateTitle() {
+    var name = el.name.value.trim() || 'Untitled';
+    document.title = (state.dirty ? '• ' : '') + name + ' - ChemBuilder';
+  }
+
+  /* Ask before anything that would wipe unsaved work off the canvas. */
+  function confirmDiscard() {
+    if (!state.dirty) return true;
+    return window.confirm('You have unsaved changes. Discard them?');
   }
 
   /* ---------- draft persistence (survives a refresh) ---------- */
@@ -331,6 +344,7 @@
     clearNode(grid);
     clearNode(badges);
     note.hidden = true;
+    note.className = 'note';
     el['elements-box'].hidden = true;
 
     var info = analysis;
@@ -342,6 +356,9 @@
       renderFormula(el.formula, '—');
       el.mw.textContent = '—';
       el.exact.textContent = '—';
+      note.hidden = false;
+      note.className = 'note hint';
+      note.textContent = 'Draw a structure with the editor tools, or paste a SMILES string onto the canvas. Properties appear here as you draw.';
       return;
     }
 
@@ -1066,12 +1083,18 @@
       metaBox.appendChild(actions);
 
       item.appendChild(metaBox);
-      item.addEventListener('dblclick', function () { openDrawing(meta.id); });
+      item.title = 'Open ' + (meta.name || 'drawing');
+      item.tabIndex = 0;
+      item.addEventListener('click', function () { openDrawing(meta.id); });
+      item.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') openDrawing(meta.id);
+      });
       holder.appendChild(item);
     });
   }
 
   async function openDrawing(id) {
+    if (!confirmDiscard()) return;
     try {
       var data = await api('/api/drawings/' + encodeURIComponent(id));
       if (!state.ketcher) throw new Error('Editor not ready');
@@ -1184,6 +1207,7 @@
   }
 
   async function newDrawing() {
+    if (!confirmDiscard()) return;
     try {
       if (state.ketcher) await state.ketcher.setMolecule('');
       state.id = null;
@@ -1245,12 +1269,20 @@
     } catch (err) { /* ignore */ }
   }
 
+  function showHelp() {
+    var dialog = el['help-dialog'];
+    if (!dialog) return;
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  }
+
   /* ---------- wiring ---------- */
 
   function wire() {
     el['btn-save'].addEventListener('click', saveCurrent);
     el['btn-new'].addEventListener('click', newDrawing);
     el['btn-retry'].addEventListener('click', pingServer);
+    el['btn-help'].addEventListener('click', showHelp);
     el['btn-refresh'].addEventListener('click', function () { scheduleRecompute(0); });
     el['btn-formats-refresh'].addEventListener('click', renderFormats);
     el['btn-lib'].addEventListener('click', function () { togglePanel('lib'); });
@@ -1280,6 +1312,11 @@
     el['btn-preview'].addEventListener('click', function () { doExport('preview'); });
 
     window.addEventListener('keydown', function (ev) {
+      if (ev.key === 'F1') {
+        ev.preventDefault();
+        showHelp();
+        return;
+      }
       var mod = ev.ctrlKey || ev.metaKey;
       if (!mod) return;
       var key = ev.key.toLowerCase();
@@ -1324,6 +1361,7 @@
     wire();
     migrateStorage();
     applyPanelPrefs();
+    updateTitle();
     loadLibrary();
 
     api('/api/info').then(function (info) {
