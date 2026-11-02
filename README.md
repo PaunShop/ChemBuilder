@@ -129,9 +129,11 @@ There is no build step: edit a file and reload the page.
 - **Clipboard image copy** needs the browser's clipboard permission and a
   recent Chrome, Edge or Firefox.
 
-## Licences
+## Licence
 
-ChemBuilder embeds two open-source libraries, unmodified:
+ChemBuilder is released under the Apache License 2.0; see `LICENSE`.
+
+It embeds two open-source libraries, unmodified:
 
 - **Ketcher** by EPAM Systems, Apache License 2.0 — `vendor/ketcher/LICENSE.txt`
 - **RDKit** by Greg Landrum and contributors, BSD 3-Clause — `vendor/rdkit/LICENSE.txt`

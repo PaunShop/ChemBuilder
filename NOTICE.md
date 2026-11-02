@@ -34,5 +34,5 @@ generation, the reaction component analysis and the library thumbnails.
 
 ## Everything else
 
-`server.js`, `app/` and the documentation are part of this project and
-carry no third-party claims.
+`server.js`, `app/` and the documentation are part of this project, released under the
+Apache License 2.0 (see `LICENSE`), and carry no third-party claims.
