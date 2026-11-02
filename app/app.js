@@ -30,7 +30,7 @@
     'mass-balance', 'stoich-ref', 'stoich-mass', 'yield-ref', 'yield-mass', 'yield-out',
     'formats-list', 'btn-formats-refresh',
     'img-width', 'img-height', 'img-transparent', 'btn-png', 'btn-svg', 'btn-copy-png',
-    'btn-preview', 'img-preview', 'toasts',
+    'btn-preview', 'img-preview', 'toasts', 'offline-bar', 'btn-retry',
   ];
 
   function $(id) {
@@ -135,12 +135,19 @@
   /* ---------- draft persistence (survives a refresh) ---------- */
 
   function saveDraft() {
+    var ket = state.lastKet || '';
+    /* beforeunload can fire before the canvas has been read back. An empty draft
+       restores nothing, so never let one overwrite a usable draft. */
+    if (!ket) {
+      var prev = readDraft();
+      if (prev && prev.ket) return;
+    }
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
         id: state.id,
         name: el.name.value,
         structure: state.structure,
-        ket: state.lastKet || '',
+        ket: ket,
         at: Date.now(),
       }));
     } catch (err) { /* storage unavailable */ }
@@ -888,8 +895,46 @@
 
   var libraryCache = [];
 
+  /* Ketcher and RDKit run entirely in the page, so once they are loaded the app
+     keeps drawing and computing properties even after the server goes away. The
+     only things that still need it are saving and the library - without this the
+     first sign of a stopped server is a bare "Failed to fetch" on save. */
+  var OFFLINE_MSG = 'ChemBuild server has stopped - restart it, then press Retry';
+  var offlineTimer = null;
+
+  function setOffline(down) {
+    var bar = el['offline-bar'];
+    if (!bar) return;
+    bar.hidden = !down;
+    if (down && !offlineTimer) offlineTimer = setInterval(pingServer, 4000);
+    if (!down && offlineTimer) {
+      clearInterval(offlineTimer);
+      offlineTimer = null;
+    }
+  }
+
+  async function pingServer() {
+    /* Deliberately bypasses api(): this probe must not re-report the outage. */
+    try {
+      await fetch('/api/info', { cache: 'no-store' });
+    } catch (err) {
+      return;
+    }
+    setOffline(false);
+    toast('Server is back - saving works again');
+    loadLibrary();
+  }
+
   async function api(path, options) {
-    var res = await fetch(path, options);
+    var res;
+    try {
+      res = await fetch(path, options);
+    } catch (err) {
+      /* A rejected fetch is a refused connection, not a rejected request. */
+      setOffline(true);
+      throw new Error(OFFLINE_MSG);
+    }
+    setOffline(false);
     var data = null;
     try {
       data = await res.json();
@@ -906,7 +951,7 @@
       libraryCache = (data && data.drawings) || [];
       renderLibrary();
     } catch (err) {
-      toast('Could not read the library', true);
+      toast((err && err.message) || 'Could not read the library', true);
     }
   }
 
@@ -1067,9 +1112,10 @@
     if (state.saving) return;
     state.saving = true;
     el['btn-save'].disabled = true;
+    var ket = '';
     try {
       if (!state.ketcher) throw new Error('Editor not ready');
-      var ket = await readKet();
+      ket = await readKet();
       var smiles = await readStructure();
       var analysis = state.analysis;
       var kind = canvasIsReaction() ? 'reaction' : smiles ? 'molecule' : 'empty';
@@ -1114,6 +1160,9 @@
       await loadLibrary();
       toast('Saved "' + result.meta.name + '"');
     } catch (err) {
+      /* Keep the work recoverable: a draft survives a reload, the canvas does not. */
+      if (ket) state.lastKet = ket;
+      saveDraft();
       toast((err && err.message) || 'Save failed', true);
     } finally {
       state.saving = false;
@@ -1188,6 +1237,7 @@
   function wire() {
     el['btn-save'].addEventListener('click', saveCurrent);
     el['btn-new'].addEventListener('click', newDrawing);
+    el['btn-retry'].addEventListener('click', pingServer);
     el['btn-refresh'].addEventListener('click', function () { scheduleRecompute(0); });
     el['btn-formats-refresh'].addEventListener('click', renderFormats);
     el['btn-lib'].addEventListener('click', function () { togglePanel('lib'); });

@@ -35,6 +35,15 @@
       </button>
     </header>
 
+    <div id="offline-bar" class="offline-bar" hidden role="status">
+      <strong>The ChemBuild server has stopped.</strong>
+      <span>
+        Drawing still works, but saving and the library need it. Start
+        <code>ChemBuild.cmd</code> again, then press Retry &mdash; your drawing stays on the canvas.
+      </span>
+      <button id="btn-retry" class="btn" type="button">Retry</button>
+    </div>
+
     <main class="layout" id="layout">
       <aside class="library" id="library">
         <div class="lib-head">

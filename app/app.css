@@ -228,6 +228,40 @@ button:focus-visible {
   border-color: transparent;
 }
 
+/* ---------- server-offline bar ---------- */
+
+.offline-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--bad);
+  background: var(--bad-weak);
+  border-bottom: 1px solid var(--border);
+}
+
+.offline-bar[hidden] {
+  display: none;
+}
+
+.offline-bar span {
+  color: var(--text);
+}
+
+.offline-bar code {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--surface);
+}
+
+.offline-bar .btn {
+  margin-left: auto;
+}
+
 /* ---------- layout ---------- */
 
 .layout {
