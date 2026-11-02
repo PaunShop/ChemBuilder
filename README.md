@@ -10,6 +10,8 @@ and [RDKit](https://github.com/rdkit/rdkit) compiled to WebAssembly for
 the chemistry. A zero-dependency Node server serves the app and keeps
 your drawings as plain files in a folder you own.
 
+![ChemBuilder with aspirin on the canvas: the library on the left, the editor in the middle, and the inspector on the right showing formula, mass, drug-likeness verdicts and descriptors](docs/screenshot-molecule.png)
+
 ## Quick start
 
 You need [Node.js](https://nodejs.org) 18 or newer. Nothing else is
@@ -61,6 +63,8 @@ balanced and by how much it is off.
 a mass, set equivalents per component, and the table fills in mmol and
 mass for everything. Enter the isolated mass of a product for a yield. A
 multi-step scheme is analysed as its overall transformation.
+
+![A Fischer esterification on the canvas, with the Reaction tab showing the component table scaled from 100 mg of acetic acid, the yield from an isolated mass, and the per-element atom balance](docs/screenshot-reaction.png)
 
 **Exports**
 
