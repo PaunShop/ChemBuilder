@@ -15,6 +15,9 @@
     name: '',
     dirty: false,
     structure: '', // last reaction/molecule SMILES read from the canvas
+    hasRepeatUnit: false,
+    repeatUnitCount: 0,
+    hasCompleteRepeatUnit: false,
     analysis: null,
     equivs: {}, // component key -> equivalents
     saving: false,
@@ -25,7 +28,8 @@
     'name', 'btn-save', 'btn-new', 'dirty', 'engine', 'btn-lib', 'btn-insp', 'layout',
     'library-list', 'lib-search', 'lib-count', 'lib-path', 'ketcher', 'canvas-veil',
     'kind-chip', 'partial-note', 'formula', 'mw', 'exact', 'rule-badges', 'prop-grid',
-    'elements-box', 'elements-list', 'btn-refresh',
+    'elements-box', 'elements-list', 'polymer-estimate', 'polymer-label', 'btn-polymer-label',
+    'polymer-dp', 'polymer-end-mass', 'polymer-estimate-out', 'btn-refresh',
     'rxn-chip', 'rxn-smiles', 'rxn-components', 'balance-table', 'balance-verdict',
     'mass-balance', 'stoich-ref', 'stoich-mass', 'yield-ref', 'yield-mass', 'yield-out',
     'formats-list', 'btn-formats-refresh',
@@ -277,6 +281,32 @@
     }
   }
 
+  function ketPolymerRepeatUnits(ket) {
+    var result = { count: 0, complete: false, label: '' };
+    try {
+      var doc = JSON.parse(ket);
+      var groups = [];
+      var molecules = Object.keys(doc).filter(function (key) {
+        var node = doc[key];
+        if (!node || node.type !== 'molecule') return false;
+        (node.sgroups || []).forEach(function (group) {
+          if (group.type === 'SRU') groups.push({ group: group, molecule: node });
+        });
+        return true;
+      });
+      result.count = groups.length;
+      if (groups.length === 1) result.label = groups[0].group.subscript || '';
+      result.complete = groups.length === 1 &&
+        Array.isArray(doc.root && doc.root.nodes) && doc.root.nodes.length === 1 &&
+        molecules.length === 1 &&
+        Array.isArray(groups[0].group.atoms) &&
+        groups[0].group.atoms.length === (groups[0].molecule.atoms || []).length;
+    } catch (err) {
+      return result;
+    }
+    return result;
+  }
+
   function canvasIsReaction() {
     try {
       return !!(state.ketcher && state.ketcher.containsReaction());
@@ -289,21 +319,40 @@
 
   async function refreshAnalysis() {
     var smiles = await readStructure();
-    renderAll(smiles);
+    await renderAll(smiles);
   }
 
-  function renderAll(smiles) {
+  var renderRequest = 0;
+  async function renderAll(smiles) {
+    var request = ++renderRequest;
     state.structure = smiles;
     state.lastKet = null;
-    readKet().then(function (ket) { state.lastKet = ket; });
+    var ket = await readKet();
+    if (request !== renderRequest) return;
+    state.lastKet = ket;
+    var repeatUnits = ketPolymerRepeatUnits(ket);
+    state.repeatUnitCount = repeatUnits.count;
+    state.hasRepeatUnit = repeatUnits.count > 0;
+    state.hasCompleteRepeatUnit = repeatUnits.complete;
+    if (document.activeElement !== el['polymer-label']) {
+      el['polymer-label'].value = repeatUnits.label;
+    }
 
     if (!window.Chem || !Chem.isReady()) {
       el['kind-chip'].textContent = smiles ? 'Waiting for chemistry engine' : 'Empty canvas';
+      renderPolymerEstimate(null);
       return;
     }
     var analysis = Chem.analyze(smiles);
     state.analysis = analysis;
     renderProperties(analysis);
+    renderPolymerEstimate(analysis);
+    if (state.hasRepeatUnit) {
+      el['partial-note'].hidden = false;
+      el['partial-note'].className = 'note hint';
+      el['partial-note'].textContent =
+        'This drawing contains a polymer repeat unit. Chemistry values describe the drawn repeat unit, not the whole polymer.';
+    }
     renderReaction(analysis);
     if (activeTab() === 'formats') renderFormats();
   }
@@ -440,6 +489,96 @@
           list.appendChild(pill);
         }
       }
+    }
+  }
+
+  function renderPolymerEstimate(analysis) {
+    var panel = el['polymer-estimate'];
+    var output = el['polymer-estimate-out'];
+    var info = analysis && analysis.kind === 'molecule' ? analysis : null;
+    var available = state.hasRepeatUnit && state.repeatUnitCount === 1 &&
+      state.hasCompleteRepeatUnit && info && info.ok && info.mw != null;
+    panel.hidden = !state.hasRepeatUnit;
+    if (!state.hasRepeatUnit) {
+      output.textContent = '';
+      output.className = 'yield-out muted';
+      return;
+    }
+    if (!available) {
+      output.className = 'yield-out muted';
+      output.textContent = state.repeatUnitCount > 1
+        ? 'Estimate unavailable: use one complete SRU for this calculation.'
+        : 'Estimate unavailable: the drawing must contain one SRU covering the complete structure, with a calculable repeat-unit mass.';
+      return;
+    }
+
+    var degree = Number(el['polymer-dp'].value);
+    var endMassText = el['polymer-end-mass'].value.trim();
+    var endMass = endMassText ? Number(endMassText) : 0;
+    if (!Number.isInteger(degree) || degree < 1) {
+      output.className = 'yield-out muted';
+      output.textContent = 'Enter a positive whole-number degree of polymerization.';
+      return;
+    }
+    if (!isFinite(endMass)) {
+      output.className = 'yield-out muted';
+      output.textContent = 'Enter a valid net end-group contribution, or leave it blank for zero.';
+      return;
+    }
+
+    var estimate = degree * info.mw + endMass;
+    if (!isFinite(estimate) || estimate <= 0) {
+      output.className = 'yield-out muted';
+      output.textContent = 'The estimated molar mass must be a positive finite value.';
+      return;
+    }
+    output.className = 'yield-out good';
+    var endAdjustment = endMass < 0
+      ? ' - ' + fmt(Math.abs(endMass), 2)
+      : ' + ' + fmt(endMass, 2);
+    output.textContent = 'Estimated molar mass ≈ ' + fmt(estimate, 2) + ' g/mol (' +
+      degree + ' × ' + fmt(info.mw, 4) + endAdjustment +
+      ' g/mol). This is an estimate, not a full-polymer formula or exact mass.';
+  }
+
+  async function applyPolymerLabel() {
+    var label = el['polymer-label'].value.trim();
+    if (!label) {
+      toast('Enter a repeat-unit label such as n, N, or M', true);
+      return;
+    }
+    if (label.length > 16) {
+      toast('Repeat-unit labels must be 16 characters or fewer', true);
+      return;
+    }
+    if (state.repeatUnitCount !== 1) {
+      toast('Edit the label on each S-Group in the editor when there is more than one repeat unit', true);
+      return;
+    }
+
+    el['btn-polymer-label'].disabled = true;
+    try {
+      var ket = await readKet();
+      var doc = JSON.parse(ket);
+      var group = null;
+      Object.keys(doc).some(function (key) {
+        var node = doc[key];
+        if (!node || node.type !== 'molecule' || !Array.isArray(node.sgroups)) return false;
+        group = node.sgroups.find(function (item) { return item.type === 'SRU'; }) || null;
+        return !!group;
+      });
+      if (!group) throw new Error('Could not find a polymer repeat unit in the drawing');
+      if (group.subscript !== label) {
+        group.subscript = label;
+        await state.ketcher.setMolecule(JSON.stringify(doc));
+        await refreshAnalysis();
+        setDirty(true);
+      }
+      toast('Repeat-unit label set to ' + label);
+    } catch (err) {
+      toast((err && err.message) || 'Could not update the repeat-unit label', true);
+    } finally {
+      el['btn-polymer-label'].disabled = false;
     }
   }
 
@@ -741,6 +880,13 @@
     }
 
     var isRxn = canvasIsReaction();
+    if (state.hasRepeatUnit) {
+      var polymerNote = document.createElement('p');
+      polymerNote.className = 'note hint';
+      polymerNote.textContent =
+        'KET, MOL/SDF V2000/V3000, CML, and CXSMILES preserve SRU brackets and labels. RDKit descriptors, InChI, and canonical SMILES describe one repeat unit, not the whole polymer.';
+      list.appendChild(polymerNote);
+    }
     var jobs = [
       { name: 'SMILES', ext: 'smi', mime: 'chemical/x-daylight-smiles', run: function () { return k.getSmiles(); } },
       { name: 'Extended SMILES (CXSMILES)', ext: 'cxsmi', mime: 'text/plain', run: function () { return k.getSmiles(true); } },
@@ -808,6 +954,11 @@
     if (!k) throw new Error('Editor not ready');
     if (!state.structure) throw new Error('Nothing on the canvas');
     var data = state.lastKet || (await readKet());
+    return svgForKet(data);
+  }
+
+  async function svgForKet(data) {
+    var k = state.ketcher;
     var result = await k.generateImage(data, { outputFormat: 'svg' });
     var text = await blobToText(result);
     if (!text || text.indexOf('<svg') === -1) throw new Error('Editor returned no drawing');
@@ -1155,6 +1306,10 @@
       var smiles = await readStructure();
       var analysis = state.analysis;
       var kind = canvasIsReaction() ? 'reaction' : smiles ? 'molecule' : 'empty';
+      var repeatUnits = ketPolymerRepeatUnits(ket);
+      state.repeatUnitCount = repeatUnits.count;
+      state.hasRepeatUnit = repeatUnits.count > 0;
+      state.hasCompleteRepeatUnit = repeatUnits.complete;
       var formula = '';
       if (analysis && analysis.kind === 'molecule' && analysis.formula) formula = analysis.formula;
       else if (analysis && analysis.kind === 'reaction') {
@@ -1162,10 +1317,16 @@
         if (p && p.formula) formula = p.formula;
       }
       var thumb = '';
+      var polymerThumbFailed = false;
       try {
-        thumb = Chem.isReady() ? Chem.svgFor(smiles, kind === 'reaction' ? 320 : 180, 120) : '';
+        if (state.hasRepeatUnit && ket) {
+          thumb = resizeSvg(await svgForKet(ket), kind === 'reaction' ? 320 : 180, 120).text;
+        } else {
+          thumb = Chem.isReady() ? Chem.svgFor(smiles, kind === 'reaction' ? 320 : 180, 120) : '';
+        }
       } catch (err) {
         thumb = '';
+        polymerThumbFailed = state.hasRepeatUnit;
       }
       var payload = {
         name: el.name.value.trim() || 'Untitled',
@@ -1195,6 +1356,7 @@
       clearDraft();
       await loadLibrary();
       toast('Saved "' + result.meta.name + '"');
+      if (polymerThumbFailed) toast('Drawing saved, but the polymer thumbnail could not be rendered.', true);
     } catch (err) {
       /* Keep the work recoverable: a draft survives a reload, the canvas does not. */
       if (ket) state.lastKet = ket;
@@ -1305,6 +1467,9 @@
     el['stoich-mass'].addEventListener('input', recomputeStoich);
     el['yield-ref'].addEventListener('change', recomputeStoich);
     el['yield-mass'].addEventListener('input', recomputeStoich);
+    el['btn-polymer-label'].addEventListener('click', applyPolymerLabel);
+    el['polymer-dp'].addEventListener('input', function () { renderPolymerEstimate(state.analysis); });
+    el['polymer-end-mass'].addEventListener('input', function () { renderPolymerEstimate(state.analysis); });
 
     el['btn-png'].addEventListener('click', function () { doExport('png'); });
     el['btn-svg'].addEventListener('click', function () { doExport('svg'); });
