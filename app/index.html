@@ -89,6 +89,31 @@
             <span class="muted small">Composition</span>
             <div id="elements-list" class="elements-list"></div>
           </div>
+          <fieldset id="polymer-estimate" class="polymer-estimate" hidden>
+            <legend>Polymer repeat unit</legend>
+            <div class="polymer-label-row">
+              <label>
+                <span class="muted small">Repeat-unit label</span>
+                <input id="polymer-label" type="text" maxlength="16" placeholder="n, N, or M" autocomplete="off" />
+              </label>
+              <button id="btn-polymer-label" class="btn tiny" type="button">Set label</button>
+            </div>
+            <p class="muted small">Use letters such as n, N or M; the label appears beside the repeat-unit brackets and is saved with the drawing.</p>
+            <h3>Polymer mass estimate</h3>
+            <p class="muted small">Estimates chain molar mass from the drawn repeat unit; this does not calculate a polymer formula or exact mass.</p>
+            <div class="polymer-inputs">
+              <label>
+                <span class="muted small">Degree of polymerization</span>
+                <input id="polymer-dp" type="number" min="1" step="1" value="100" />
+              </label>
+              <label>
+                <span class="muted small">Net end-group contribution (g/mol)</span>
+                <input id="polymer-end-mass" type="number" step="any" placeholder="0" />
+              </label>
+            </div>
+            <p class="muted small">Enter the combined mass correction for all chain ends. Leave blank for zero; negative values are allowed.</p>
+            <p id="polymer-estimate-out" class="yield-out muted" aria-live="polite"></p>
+          </fieldset>
         </div>
 
         <div class="panel" id="panel-rxn" role="tabpanel">
@@ -215,6 +240,14 @@
           </tbody>
         </table>
         <p class="muted small">The editor has its own shortcuts, listed under the <b>?</b> button on the canvas toolbar.</p>
+
+        <h3>Polymer repeat units</h3>
+        <ol>
+          <li>Draw the repeat unit and select its atoms with the rectangle selection tool.</li>
+          <li>Choose <b>S-Group</b> on the editor toolbar (or press <kbd>Ctrl</kbd> <kbd>G</kbd>).</li>
+          <li>Set <b>Type</b> to <b>SRU polymer</b>, enter a polymer label such as <code>n</code>, choose the repeat pattern, then Apply.</li>
+        </ol>
+        <p class="muted small">KET, MOL/SDF, CML and CXSMILES retain the bracket and label. In the Properties tab, set the label to a letter such as <code>N</code> or <code>M</code>. Chemistry properties, InChI and canonical SMILES describe the drawn repeat unit, not whole-polymer properties. For one SRU covering the complete structure, the Properties tab can estimate chain molar mass from a degree of polymerization and optional net end-group contribution.</p>
       </form>
     </dialog>
 

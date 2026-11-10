@@ -38,9 +38,19 @@ on first run.
 ## Features
 
 **Drawing** is the Ketcher editor, embedded whole: atoms, bonds, rings,
-templates, stereo, charges, R-groups, text annotations, reaction arrows,
-plus signs and reagents written over the arrow. Multi-step schemes work.
-Paste a SMILES string or a MOL block straight onto the canvas.
+templates, stereo, charges, R-groups, S-groups (including polymer SRUs),
+text annotations, reaction arrows, plus signs and reagents written over the
+arrow. Multi-step schemes work.
+Paste a SMILES string or a MOL block straight onto the canvas. Polymer
+repeat units are native SRU S-groups: select the repeat-unit atoms, choose
+**S-Group**, set **Type** to **SRU polymer**, enter a label such as `n`,
+and choose the repeat pattern. The Properties panel also lets you set the
+repeat-unit label to a letter such as `N` or `M`; it is shown beside the
+brackets and saved with the structure.
+For a single SRU that covers the complete structure, the Properties panel
+also estimates chain molar mass from a degree of polymerization and an
+optional net end-group contribution. It does not infer a full-polymer
+formula or account for molecular-weight distribution.
 
 **Properties** update as you draw:
 
@@ -130,6 +140,15 @@ There is no build step: edit a file and reload the page.
 - **Macromolecule mode** (the editor's own sequence/polymer view) has no
   SMILES or MOL representation, so the inspector panels report those
   formats as unavailable while it is on.
+- **Polymer SRU groups** are stored as structural data, not text brackets.
+  KET, MOL/SDF V2000/V3000, CML and CXSMILES retain the bracket and repeat
+  label. Chemistry properties, InChI and canonical SMILES describe the drawn
+  repeat unit; RDKit cannot infer properties such as the molecular mass of
+  the full polymer.
+- **Polymer mass estimates** use `degree of polymerization × repeat-unit
+  molecular weight + net end-group contribution`. They are shown only for
+  one SRU covering the complete structure and do not account for dispersity,
+  conversion or other polymer populations.
 - **Clipboard image copy** needs the browser's clipboard permission and a
   recent Chrome, Edge or Firefox.
 

@@ -667,6 +667,82 @@ button:focus-visible {
   margin-top: 14px;
 }
 
+.polymer-estimate {
+  margin: 14px 0 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+
+.polymer-estimate[hidden] {
+  display: none;
+}
+
+.polymer-estimate legend {
+  padding: 0 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.polymer-estimate h3 {
+  margin: 12px 0 4px;
+  font-size: 12.5px;
+}
+
+.polymer-estimate p {
+  margin: 4px 0 8px;
+}
+
+.polymer-label-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.polymer-label-row label {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.polymer-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.polymer-inputs label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.polymer-inputs input {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 7px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.polymer-label-row input {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 7px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+}
+
 .elements-list {
   display: flex;
   flex-wrap: wrap;
